@@ -4,16 +4,15 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/codegangsta/envy/lib"
-	"github.com/codegangsta/gin/lib"
+	envy "github.com/codegangsta/envy/lib"
+	gin "github.com/codegangsta/gin/lib"
 	shellwords "github.com/mattn/go-shellwords"
-	"github.com/urfave/cli"
+	cli "github.com/urfave/cli"
 
 	"log"
 	"os"
 	"os/signal"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"syscall"
 	"time"
@@ -39,119 +38,119 @@ func main() {
 	app.Usage = "A live reload utility for Go web applications."
 	app.Action = MainAction
 	app.Flags = []cli.Flag{
-		cli.StringFlag{
-			Name:   "laddr,l",
-			Value:  "",
-			EnvVar: "GIN_LADDR",
-			Usage:  "listening address for the proxy server",
+		&cli.StringFlag{
+			Name:    "laddr,l",
+			Value:   "",
+			EnvVars: []string{"GIN_LADDR"},
+			Usage:   "listening address for the proxy server",
 		},
-		cli.IntFlag{
-			Name:   "port,p",
-			Value:  3000,
-			EnvVar: "GIN_PORT",
-			Usage:  "port for the proxy server",
+		&cli.IntFlag{
+			Name:    "port,p",
+			Value:   3000,
+			EnvVars: []string{"GIN_PORT"},
+			Usage:   "port for the proxy server",
 		},
-		cli.IntFlag{
-			Name:   "appPort,a",
-			Value:  3001,
-			EnvVar: "BIN_APP_PORT",
-			Usage:  "port for the Go web server",
+		&cli.IntFlag{
+			Name:    "appPort,a",
+			Value:   3001,
+			EnvVars: []string{"BIN_APP_PORT"},
+			Usage:   "port for the Go web server",
 		},
-		cli.StringFlag{
-			Name:   "bin,b",
-			Value:  "gin-bin",
-			EnvVar: "GIN_BIN",
-			Usage:  "name of generated binary file",
+		&cli.StringFlag{
+			Name:    "bin,b",
+			Value:   "gin-bin",
+			EnvVars: []string{"GIN_BIN"},
+			Usage:   "name of generated binary file",
 		},
-		cli.StringFlag{
-			Name:   "path,t",
-			Value:  ".",
-			EnvVar: "GIN_PATH",
-			Usage:  "Path to watch files from",
+		&cli.StringFlag{
+			Name:    "path,t",
+			Value:   ".",
+			EnvVars: []string{"GIN_PATH"},
+			Usage:   "Path to watch files from",
 		},
-		cli.StringFlag{
-			Name:   "build,d",
-			Value:  "",
-			EnvVar: "GIN_BUILD",
-			Usage:  "Path to build files from (defaults to same value as --path)",
+		&cli.StringFlag{
+			Name:    "build,d",
+			Value:   "",
+			EnvVars: []string{"GIN_BUILD"},
+			Usage:   "Path to build files from (defaults to same value as --path)",
 		},
-		cli.StringSliceFlag{
-			Name:   "excludeDir,x",
-			Value:  &cli.StringSlice{},
-			EnvVar: "GIN_EXCLUDE_DIR",
-			Usage:  "Relative directories to exclude",
+		&cli.StringSliceFlag{
+			Name:    "excludeDir,x",
+			Value:   &cli.StringSlice{},
+			EnvVars: []string{"GIN_EXCLUDE_DIR"},
+			Usage:   "Relative directories to exclude",
 		},
-		cli.BoolFlag{
-			Name:   "immediate,i",
-			EnvVar: "GIN_IMMEDIATE",
-			Usage:  "run the server immediately after it's built",
+		&cli.BoolFlag{
+			Name:    "immediate,i",
+			EnvVars: []string{"GIN_IMMEDIATE"},
+			Usage:   "run the server immediately after it's built",
 		},
-		cli.BoolFlag{
-			Name:   "all",
-			EnvVar: "GIN_ALL",
-			Usage:  "reloads whenever any file changes, as opposed to reloading only on .go file change",
+		&cli.BoolFlag{
+			Name:    "all",
+			EnvVars: []string{"GIN_ALL"},
+			Usage:   "reloads whenever any file changes, as opposed to reloading only on .go file change",
 		},
-		cli.BoolFlag{
-			Name:   "godep,g",
-			EnvVar: "GIN_GODEP",
-			Usage:  "use godep when building",
+		&cli.BoolFlag{
+			Name:    "godep,g",
+			EnvVars: []string{"GIN_GODEP"},
+			Usage:   "use godep when building",
 		},
-		cli.StringFlag{
-			Name:   "buildArgs",
-			EnvVar: "GIN_BUILD_ARGS",
-			Usage:  "Additional go build arguments",
+		&cli.StringFlag{
+			Name:    "buildArgs",
+			EnvVars: []string{"GIN_BUILD_ARGS"},
+			Usage:   "Additional go build arguments",
 		},
-		cli.StringFlag{
-			Name:   "certFile",
-			EnvVar: "GIN_CERT_FILE",
-			Usage:  "TLS Certificate",
+		&cli.StringFlag{
+			Name:    "certFile",
+			EnvVars: []string{"GIN_CERT_FILE"},
+			Usage:   "TLS Certificate",
 		},
-		cli.StringFlag{
-			Name:   "keyFile",
-			EnvVar: "GIN_KEY_FILE",
-			Usage:  "TLS Certificate Key",
+		&cli.StringFlag{
+			Name:    "keyFile",
+			EnvVars: []string{"GIN_KEY_FILE"},
+			Usage:   "TLS Certificate Key",
 		},
-		cli.StringFlag{
-			Name:   "logPrefix",
-			EnvVar: "GIN_LOG_PREFIX",
-			Usage:  "Log prefix",
-			Value:  "gin",
+		&cli.StringFlag{
+			Name:    "logPrefix",
+			EnvVars: []string{"GIN_LOG_PREFIX"},
+			Usage:   "Log prefix",
+			Value:   "gin",
 		},
-		cli.BoolFlag{
-			Name:   "notifications",
-			EnvVar: "GIN_NOTIFICATIONS",
-			Usage:  "Enables desktop notifications",
+		&cli.BoolFlag{
+			Name:    "notifications",
+			EnvVars: []string{"GIN_NOTIFICATIONS"},
+			Usage:   "Enables desktop notifications",
 		},
 	}
-	app.Commands = []cli.Command{
+	app.Commands = []*cli.Command{
 		{
 			Name:            "run",
-			ShortName:       "r",
+			Aliases:         []string{"r"},
 			Usage:           "Run the gin proxy in the current working directory",
 			Action:          MainAction,
 			SkipFlagParsing: true,
 		},
 		{
-			Name:      "env",
-			ShortName: "e",
-			Usage:     "Display environment variables set by the .env file",
-			Action:    EnvAction,
+			Name:    "env",
+			Aliases: []string{"e"},
+			Usage:   "Display environment variables set by the .env file",
+			Action:  EnvAction,
 		},
 	}
 
 	app.Run(os.Args)
 }
 
-func MainAction(c *cli.Context) {
-	laddr := c.GlobalString("laddr")
-	port := c.GlobalInt("port")
-	all := c.GlobalBool("all")
-	appPort := strconv.Itoa(c.GlobalInt("appPort"))
-	immediate = c.GlobalBool("immediate")
-	keyFile := c.GlobalString("keyFile")
-	certFile := c.GlobalString("certFile")
-	logPrefix := c.GlobalString("logPrefix")
-	notifications = c.GlobalBool("notifications")
+func MainAction(c *cli.Context) error {
+	laddr := c.Value("laddr").(string)
+	port := c.Value("port").(int)
+	all := c.Value("all").(bool)
+	appPort := c.Value("appPort").(string)
+	immediate = c.Value("immediate").(bool)
+	keyFile := c.Value("keyFile").(string)
+	certFile := c.Value("certFile").(string)
+	logPrefix := c.Value("logPrefix").(string)
+	notifications = c.Value("notifications").(bool)
 
 	logger.SetPrefix(fmt.Sprintf("[%s] ", logPrefix))
 
@@ -166,17 +165,17 @@ func MainAction(c *cli.Context) {
 		logger.Fatal(err)
 	}
 
-	buildArgs, err := shellwords.Parse(c.GlobalString("buildArgs"))
+	buildArgs, err := shellwords.Parse(c.Value("buildArgs").(string))
 	if err != nil {
 		logger.Fatal(err)
 	}
 
-	buildPath := c.GlobalString("build")
+	buildPath := c.Value("build").(string)
 	if buildPath == "" {
-		buildPath = c.GlobalString("path")
+		buildPath = c.Value("path").(string)
 	}
-	builder := gin.NewBuilder(buildPath, c.GlobalString("bin"), c.GlobalBool("godep"), wd, buildArgs)
-	runner := gin.NewRunner(filepath.Join(wd, builder.Binary()), c.Args()...)
+	builder := gin.NewBuilder(buildPath, c.Value("bin").(string), c.Value("godep").(bool), wd, buildArgs)
+	runner := gin.NewRunner(filepath.Join(wd, builder.Binary()), c.Args().Slice()...)
 	runner.SetWriter(os.Stdout)
 	proxy := gin.NewProxy(builder, runner)
 
@@ -205,14 +204,15 @@ func MainAction(c *cli.Context) {
 	build(builder, runner, logger)
 
 	// scan for changes
-	scanChanges(c.GlobalString("path"), c.GlobalStringSlice("excludeDir"), all, func(path string) {
+	scanChanges(c.Value("path").(string), c.Value("excludeDir").([]string), all, func(path string) {
 		runner.Kill()
 		build(builder, runner, logger)
 	})
+	return nil
 }
 
-func EnvAction(c *cli.Context) {
-	logPrefix := c.GlobalString("logPrefix")
+func EnvAction(c *cli.Context) error {
+	logPrefix := c.Value("logPrefix").(string)
 	logger.SetPrefix(fmt.Sprintf("[%s] ", logPrefix))
 
 	// Bootstrap the environment
@@ -224,7 +224,7 @@ func EnvAction(c *cli.Context) {
 	for k, v := range env {
 		fmt.Printf("%s: %s\n", k, v)
 	}
-
+	return nil
 }
 
 func build(builder gin.Builder, runner gin.Runner, logger *log.Logger) {
